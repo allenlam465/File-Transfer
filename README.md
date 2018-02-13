@@ -1,3 +1,3 @@
 # CS380_Project
 
-File transfer tool using python with TCP protocols. 
+File transfer tool using python with FTP protocols. 
