@@ -11,9 +11,13 @@ def checkAuthen(token):
             if(token.strip() == line.strip()):
                 print ("Authorized user.")
                 return True
-            else:
-                print ("Invalid username or password.")
-                return False
+
+    print("Invalid username or password.")
+    return False
+
+
+def serverClose():
+    server.close()
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Start socket protocols
 host = socket.gethostname() #Obtain host name
@@ -24,17 +28,24 @@ server.listen(5) #Listen for 5 connections
 
 (client, addr) = server.accept()  #accept connection in the bound socket
 print ("Got connection from ", addr)
-token = (client.recv(1024).decode('utf-8')) #Recv from connected client
 
-print ("Checking authorization.")
+tries = 0
 
-if(checkAuthen(token)):
-    while True:
-        client.send(bytes("Thank you for connecting.",'utf-8')) #Sends message back to client
-        print (client.recv(1024).decode('utf-8'))
-        client.close() #Close connection with client
-        break
-else:
-    client.send(bytes("Invalid login information.",'utf-8')) #Sends message back to client
+while(tries != 3):
+
+    token = (client.recv(1024).decode('utf-8')) #Recv from connected client
+    print ("Checking authorization.")
+
+    if(checkAuthen(token)):
+        while True:
+            client.send(bytes("Thank you for connecting.",'utf-8')) #Sends message back to client
+            print (client.recv(1024).decode('utf-8'))
+            client.close() #Close connection with client
+            break
+        else:
+            client.send(bytes("Invalid login information.",'utf-8')) #Sends message back to client
+            tries += 1
+
+    server.listen(5) #Listen for 5 connections
 
 server.close() #Close server
