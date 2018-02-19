@@ -2,15 +2,33 @@
 
 import socket
 import getpass
+import hashlib
+import crypt
 
 
+#login stored as user/salt/hashed_password
 def createAcc():
     user = input("Input new user:")
     pw = getpass.getpass()
-    token = user + "/" + pw
+    salt = crypt.mksalt(crypt.METHOD_SHA512)
+    hashed_password = hashlib.sha512((pw + salt).encode()).hexdigest()
+    token = user + "/" + salt + "/" + hashed_password
 
     with open("user.txt", "a") as myFile:
         myFile.write(token)
+        myFile.write("\n")
+
+def checkLogin(token):
+    fileName = "users.txt"
+    file = open(fileName, "r")
+    with open(fileName) as f:
+        for line in f.readlines():
+            split = line.split("/")
+            if token.strip() == split[0].strip():
+                return split[1]  # return salt
+
+    print("Invalid username.")
+    return -1
 
 
 def checkAuthen(token):
@@ -52,9 +70,26 @@ print("Got connection from ", addr)
 tries = 3
 
 while(tries != 0):
-    token = (client.recv(1024).decode('utf-8'))  # Recv from connected client
+    # receive username from client
+    login_token = (client.recv(1024).decode('utf-8'))
+    print("received login: " + login_token)
 
-    print("Checking authorization.")
+    # return salt to client
+    salt = checkLogin(login_token).strip()
+    if salt == -1:
+        # invalid username subtract 1 try
+        tries -= 1
+    else:
+        print("found salt, sending: " + salt)
+        sendMessage(salt)
+        # receive password hash from client
+        pw_token = (client.recv(1024).decode('utf-8')).strip()
+
+        # concat login/salt/pw
+        token = login_token + "/" + salt + "/" + pw_token
+        print(token)
+
+        print("Checking authorization.")
 
     if(checkAuthen(token)):
         while True:
