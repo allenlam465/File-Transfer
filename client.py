@@ -8,7 +8,7 @@ def login_user():
     user = input("Username: ")
     return user
 
-def login_pass(salt):
+def login_password(salt):
     pw = getpass.getpass()
     hashed_password = hashlib.sha512((pw + salt).encode()).hexdigest()
     return hashed_password
@@ -32,10 +32,11 @@ while True:
     # receive password salt for that username
     salt = (server.recv(1024).decode('utf-8')).strip()
 
-    hashed_pw = login_pass(salt)
+    pw_token = login_password(salt)
 
     # send hashed pw to authenticate
-    server.send(bytes(user_token, 'utf-8'))
+    server.send(bytes(pw_token, 'utf-8'))
+    print("attempting to login...")
 
     # recieve confirmation of successful login
     accept = (server.recv(1024).decode('utf-8')).strip()
