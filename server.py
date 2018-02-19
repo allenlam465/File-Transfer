@@ -7,7 +7,7 @@ import crypt
 import time
 
 
-#login stored as user/salt/hashed_password
+# login stored as user/salt/hashed_password
 def createAcc():
     user = input("Input new user:")
     pw = getpass.getpass()
@@ -18,6 +18,7 @@ def createAcc():
     with open("user.txt", "a") as myFile:
         myFile.write(token)
         myFile.write("\n")
+
 
 def checkLogin(token):
     fileName = "users.txt"
@@ -75,10 +76,10 @@ while(tries != 0):
     login_token = (client.recv(1024).decode('utf-8'))
 
     # return salt to client
-    salt = checkLogin(login_token).strip()
+    salt = checkLogin(login_token)
     if salt == -1:
         # invalid username subtract 1 try
-        tries -= 1
+        token = ""
     else:
         sendMessage(salt)
         # receive password hash from client
@@ -111,14 +112,15 @@ while(tries != 0):
             break
         break
     else:
-        tries -= 1
         if tries == 0:
             sendMessage("-1")
             sendMessage("Too many tries server closing.")
             break
         else:
+            tries -= 1
             sendMessage("0")
             line = "Number tries left: " + str(tries)
             sendMessage(line)
 
 serverClose()
+

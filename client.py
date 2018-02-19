@@ -4,9 +4,11 @@ import socket
 import getpass
 import hashlib
 
+
 def login_user():
     user = input("Username: ")
     return user
+
 
 def login_password(salt):
     pw = getpass.getpass()
@@ -32,14 +34,19 @@ while True:
     # receive password salt for that username
     salt = (server.recv(1024).decode('utf-8')).strip()
 
-    pw_token = login_password(salt)
+    print(salt)
 
-    # send hashed pw to authenticate
-    server.send(bytes(pw_token, 'utf-8'))
-    print("attempting to login...")
+    if salt != "0":
+        pw_token = login_password(salt)
 
-    # recieve confirmation of successful login
-    accept = (server.recv(1024).decode('utf-8')).strip()
+        # send hashed pw to authenticate
+        server.send(bytes(pw_token, 'utf-8'))
+        print("attempting to login...")
+
+        # recieve confirmation of successful login
+        accept = (server.recv(1024).decode('utf-8')).strip()
+    else:
+        accept = "0"
 
     if accept == "1":
         # Print received from server up to 1024 bytes
@@ -63,3 +70,4 @@ while True:
 
 server.send(bytes("Sender closing connection.", 'utf-8'))
 server.close  # Close connection
+
