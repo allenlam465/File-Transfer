@@ -4,6 +4,7 @@ import socket
 import getpass
 import hashlib
 import crypt
+import time
 
 
 #login stored as user/salt/hashed_password
@@ -72,7 +73,6 @@ tries = 3
 while(tries != 0):
     # receive username from client
     login_token = (client.recv(1024).decode('utf-8'))
-    print("received login: " + login_token)
 
     # return salt to client
     salt = checkLogin(login_token).strip()
@@ -80,20 +80,21 @@ while(tries != 0):
         # invalid username subtract 1 try
         tries -= 1
     else:
-        print("found salt, sending: " + salt)
         sendMessage(salt)
         # receive password hash from client
         pw_token = (client.recv(1024).decode('utf-8')).strip()
 
         # concat login/salt/pw
         token = login_token + "/" + salt + "/" + pw_token
-        print(token)
 
         print("Checking authorization.")
 
     if(checkAuthen(token)):
         while True:
             sendMessage("1")  # Sends message back to client
+            # had to wait before sending next message
+            # if not, both messages read together
+            time.sleep(0.25)
             sendMessage("Thank you for connecting.")
 
             with open('received_file', 'wb') as f:
