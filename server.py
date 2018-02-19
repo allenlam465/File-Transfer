@@ -112,15 +112,14 @@ while(tries != 0):
             break
         break
     else:
+        tries -= 1
         if tries == 0:
             sendMessage("-1")
             sendMessage("Too many tries server closing.")
             break
         else:
-            tries -= 1
             sendMessage("0")
             line = "Number tries left: " + str(tries)
             sendMessage(line)
 
 serverClose()
-
