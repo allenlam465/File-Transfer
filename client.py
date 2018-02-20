@@ -34,6 +34,7 @@ while True:
     # receive password salt for that username
     salt = (server.recv(1024).decode('utf-8')).strip()
 
+    print("SALT")
     print(salt)
 
     if salt != "0":
@@ -44,9 +45,13 @@ while True:
         print("attempting to login...")
 
         # recieve confirmation of successful login
-        accept = (server.recv(1024).decode('utf-8')).strip()
     else:
         accept = "0"
+
+    accept = (server.recv(1024).decode('utf-8')).strip()
+
+    print("ACCEPT")
+    print(accept)
 
     if accept == "1":
         # Print received from server up to 1024 bytes
@@ -70,4 +75,3 @@ while True:
 
 server.send(bytes("Sender closing connection.", 'utf-8'))
 server.close  # Close connection
-

@@ -79,6 +79,7 @@ while(tries != 0):
     salt = checkLogin(login_token)
     if salt == -1:
         # invalid username subtract 1 try
+        sendMessage("0")
         token = ""
     else:
         sendMessage(salt)
