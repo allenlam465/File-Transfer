@@ -2,13 +2,18 @@
 
 import socket
 import getpass
+import hashlib
 
 
-def login():
+def login_user():
     user = input("Username: ")
+    return user
+
+
+def login_password(salt):
     pw = getpass.getpass()
-    token = user + "/" + pw
-    return token
+    hashed_password = hashlib.sha512((pw + salt).encode()).hexdigest()
+    return hashed_password
 
 
 # Start socket protocols
@@ -22,14 +27,34 @@ server.settimeout(10)
 server.connect((host, port))
 
 while True:
-    token = login()
-    server.send(bytes(token, 'utf-8'))  # sends login token user/pass
+    user_token = login_user()
+    # send username to check if it exists
+    server.send(bytes(user_token, 'utf-8'))
 
-    # recieve confirmation of successful login
+    # receive password salt for that username
+    salt = (server.recv(1024).decode('utf-8')).strip()
+
+    print("SALT")
+    print(salt)
+
+    if salt != "0":
+        pw_token = login_password(salt)
+
+        # send hashed pw to authenticate
+        server.send(bytes(pw_token, 'utf-8'))
+        print("attempting to login...")
+
+        # recieve confirmation of successful login
+    else:
+        accept = "0"
+
     accept = (server.recv(1024).decode('utf-8')).strip()
 
+    print("ACCEPT")
+    print(accept)
+
     if accept == "1":
-        # Print recieved from server up to 1024 bytes
+        # Print received from server up to 1024 bytes
         print(server.recv(1024).decode('utf-8'))
 
         fileName = input("File: ")
