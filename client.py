@@ -89,4 +89,5 @@ class Client:
                 # Sends message back to client
                 print("Invalid login information.")
 
+        print(self.recvMessage())
         self.clientClose()

@@ -60,19 +60,6 @@ class Server:
         print("Invalid username or password.")
         return False
 
-    def recvData(self):
-        with open('received_file', 'wb') as f:
-            print("Opened file.")
-            while True:
-                print('Receiving data...')
-                data = client.recv(1024)
-                print('data=%s', (data))
-                if not data:
-                    break
-                    # write data to a file
-                f.write(data)
-        f.close()
-
     def serverClose(self):
         self.server.close()  # Close server
 
@@ -140,5 +127,6 @@ class Server:
                     client.send(bytes("0", 'utf-8'))
                     line = "Number tries left: " + str(tries)
                     client.send(bytes(line, 'utf-8'))
+
         client.send(bytes(" Closing connections.", 'utf-8'))
         self.serverClose()
