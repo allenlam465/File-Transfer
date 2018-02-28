@@ -18,7 +18,6 @@ kTable=[]
 kvalue=open("KTable.txt")
 for each in kvalue:
     kTable.append(each)
-#    print(each)
 
 shiftAmounts=[
         7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
@@ -59,19 +58,26 @@ block = []
 with open("data.txt","ab+") as file:
     file.write(b'1')        #pre-processing:adding a single 1 bit    
     eofPosition=file.tell()
-    while(eofPosition % 512 < 448): #pre-processing: padding with 0's and adding original length in bits to message
+    while(eofPosition % BLOCKSIZE1 < 448): #pre-processing: padding with 0's and adding original length in bits to message
         file.write(b'0')
         eofPosition=file.tell()
-    ogLength='{0:b}'.format(eofPosition) % 2**64    #original length in bits mod 2^64 ***not sure about thispart
-    file.write('{0:b}'.format(ogLength))
+    ogLength="{:b}".format(eofPosition % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
+#    print(ogLength)
+    file.close()
+    file=open("data.txt","a+")
+    file.write(ogLength)
     file.close()
 #Process the message in successive 512-bit chunks:
 file=open("data.txt","rb")
-chunkbig=file.read(512)
+chunkbig=file.read(BLOCKSIZE1)
+#print("chunkbig:")
+#print(chunkbig)
 for chunkBig in file:
     M=[]
     for j in range(0, 16):
-        chunkSmall=chunkBig[j*32:32+j*32]
+        chunkSmall=chunkBig[j*BLOCKSIZE2:BLOCKSIZE2+j*BLOCKSIZE2]
+        chunkSmall=int(chunkSmall,2)
+        chunkSmall=bytes(chunkSmall)
         M.append(chunkSmall)
 #intialize hash value for this chunk:
     A=wordA
@@ -92,18 +98,24 @@ for chunkBig in file:
         elif 48 <= i <= 63:
             f=I(B,C,D)
             g=(7*i) % 16
-        f=f+A+k[i]+M[g]
+        f=f+A+kTable[i]+M[g]
         A=D
         D=C
         C=B
-        B=B+leftRotate(f,s[i])
-    chunkBig=file.read(512)
-#Add this chunk;s hash to result so far:
+        B=B+leftRotate(f,shiftAmounts[i])
+        print("activated for loop")
+    print("before file.read")
+    chunkBig=file.read(BLOCKSIZE1)
+    print("after file.read")
+#Add this chunk's hash to result so far:
     wordA=wordA + A
     wordB=wordB + B
     wordC=wordC + C
     wordD=wordD + D
 digest=[]
-digest.append(wordA+wordB+wordC+wordD)      #output is in little-endian
+digest.append(wordA)      #output is in little-endian
+digest.append(wordB)
+digest.append(wordC)
+digest.append(wordD)
 for each in digest:
-    print(each)
+    print(format(each,'x'))
