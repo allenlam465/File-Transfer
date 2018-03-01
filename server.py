@@ -111,7 +111,6 @@ class Server:
                             print('data=%s', (data))
                             if not data:
                                 break
-                                # write data to a file
                             f.write(data)
                     f.close()
                     break
@@ -129,4 +128,5 @@ class Server:
                     client.send(bytes(line, 'utf-8'))
 
         client.send(bytes(" Closing connections.", 'utf-8'))
+        print(client.recv(1024).decode('utf-8'))
         self.serverClose()
