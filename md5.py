@@ -59,10 +59,15 @@ def bytesToInt(byte):
     print("bytestoINT")
     print(type(byte))
     print(byte)
+<<<<<<< HEAD
     print(int.from_byte(byte, byteorder='big', signed=False))
     return int.from_byte(byte, byteorder='big', signed=False)
 
 
+=======
+    print(int.from_bytes(byte, byteorder='little', signed=False))
+    return int.from_bytes(byte, byteorder='little', signed=False)
+>>>>>>> 306c73295177e97783ce05dd954c98ddc46fc288
 #preparing the input####################################################
     # tokenize input
     # split it into 512 bits
