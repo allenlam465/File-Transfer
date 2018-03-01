@@ -10,6 +10,7 @@ wordA=0x67452301
 wordB=0xefcdab89
 wordC=0x98badcfe
 wordD=0x10325476
+print(type(wordA))
 #the table
 #MD5 uses a table K that has 64 elements. The table is computed beforehand to speed up the computations. The elements are computing using the mathematical sin function: K=abs(sin(i+1))*2^32
 #computed this and have a table for it saved (KTable.txt)
@@ -52,9 +53,6 @@ def bytesToInt(byte):
     print(byte)
     print(int.from_bytes(byte, byteorder='little', signed=False))
     return int.from_bytes(byte, byteorder='little', signed=False)
-
-def str2Bin(string):
-    return ''.join(format(ord(x),'b') for x in string)
 #preparing the input####################################################
     #tokenize input
     #split it into 512 bits
@@ -64,22 +62,19 @@ BLOCKSIZE2=32
 INSERTIONBITS=64
 
 #input containers declarations
-with open("data.txt","r") as file:
+with open("data.txt","rb") as file:
     data=file.read()
-    data=str2Bin(data)
-    print(type(data))
-    data+='1'           #pre-processing:adding a single 1 bit  
-    ogDataLen=len(data)
-    eofPosition=ogDataLen
+    data=str.encode(data,'utf-8')
+    print(data)
+    data+=b'1'           #pre-processing:adding a single 1 bit  
+    eofPosition=len(data)
     while(eofPosition % BLOCKSIZE1 < 448): #pre-processing: padding with 0's and adding original length in bits to message
-        data+='0'
+        data+=b'0'
         eofPosition+=1
-    ogLength="{:b}".format(ogDataLen % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
+    ogLength="{:b}".format(eofPosition % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
     print(ogLength)
     file.close()
-    ogLength=str2Bin(ogLength)
-    print("ogLength")
-    print(ogLength)
+    ogLength=bytes(ogLength,'utf-8')
     data+=ogLength
     print(data)
 #Process the message in successive 512-bit chunks:
