@@ -10,10 +10,11 @@ wordA=0x67452301
 wordB=0xefcdab89
 wordC=0x98badcfe
 wordD=0x10325476
-
+print(type(wordA))
 #the table
 #MD5 uses a table K that has 64 elements. The table is computed beforehand to speed up the computations. The elements are computing using the mathematical sin function: K=abs(sin(i+1))*2^32
 #computed this and have a table for it saved (KTable.txt)
+#creating K table for MD5 algorithm
 kTable=[]
 kvalue=open("KTable.txt")
 for each in kvalue:
@@ -45,6 +46,14 @@ def I(x,y,z):
 def leftRotate (x,c):
     return (x << c) | (x >> (32-c))
 
+#bytesToInt
+def bytesToInt(byte):
+    print("bytestoINt")
+    print(type(byte))
+    print(byte)
+    print(int.from_bytes('0000000', byteorder='big', signed=False))
+    return int.from_bytes(byte, byteorder='big', signed=False)
+
 #preparing the input####################################################
     #tokenize input
     #split it into 512 bits
@@ -54,64 +63,72 @@ BLOCKSIZE2=32
 INSERTIONBITS=64
 
 #input containers declarations
-block = []
-with open("data.txt","ab+") as file:
-    file.write(b'1')        #pre-processing:adding a single 1 bit    
-    eofPosition=file.tell()
+with open("data.txt","rb") as file:
+    data=file.read()
+    print(data)
+    data+=b'1'           #pre-processing:adding a single 1 bit  
+    eofPosition=len(data)
     while(eofPosition % BLOCKSIZE1 < 448): #pre-processing: padding with 0's and adding original length in bits to message
-        file.write(b'0')
-        eofPosition=file.tell()
+        data+=b'0'
+        eofPosition+=1
     ogLength="{:b}".format(eofPosition % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
-#    print(ogLength)
+    print(ogLength)
     file.close()
-    file=open("data.txt","a+")
-    file.write(ogLength)
-    file.close()
+    ogLength=bytes(ogLength,'utf-8')
+    data+=ogLength
+    print(data)
 #Process the message in successive 512-bit chunks:
-file=open("data.txt","rb")
-chunkbig=file.read(BLOCKSIZE1)
-#print("chunkbig:")
-#print(chunkbig)
-for chunkBig in file:
+chunkBig=data[:BLOCKSIZE1]
+blocks=[]
+blockNum=0
+keepGoing = len(data)
+
+while keepGoing > 0:
+    blocks.append(data[blockNum*BLOCKSIZE1:(blockNum+1)*BLOCKSIZE1])
+    keepGoing-=BLOCKSIZE1
+for b in blocks:
     M=[]
     for j in range(0, 16):
-        chunkSmall=chunkBig[j*BLOCKSIZE2:BLOCKSIZE2+j*BLOCKSIZE2]
-        chunkSmall=int(chunkSmall,2)
-        chunkSmall=bytes(chunkSmall)
+        chunkSmall=b[j*BLOCKSIZE2:(j+1)*BLOCKSIZE2]
         M.append(chunkSmall)
 #intialize hash value for this chunk:
     A=wordA
     B=wordB
     C=wordC
     D=wordD
+    print("A:")
+    print(A)
+    print("B:")
+    print(B)
 #Main Loop
     for i in range(0,64):
         if 0 <= i <= 15:
-            f=F(B,C,D)
+            f=F(B,C,D) 
             g=i
         elif 16 <= i <= 31:
-            f=F(D,B,C)
+            f=F(D,B,C) 
             g=(5*i + 1) % 16
         elif 32 <= i <= 47:
-            f=H(B,C,D)
+            f=H(B,C,D) 
             g=(3*i + 5) % 16
         elif 48 <= i <= 63:
-            f=I(B,C,D)
+            f=I(B,C,D) 
             g=(7*i) % 16
-        f=f+A+kTable[i]+M[g]
+        print("f")
+        f=f+A+int(kTable[i],16)+bytesToInt(M[g])
+        print((M[g]))
         A=D
         D=C
         C=B
         B=B+leftRotate(f,shiftAmounts[i])
-        print("activated for loop")
-    print("before file.read")
-    chunkBig=file.read(BLOCKSIZE1)
-    print("after file.read")
+        print("C is:")
+        print(C)
 #Add this chunk's hash to result so far:
     wordA=wordA + A
     wordB=wordB + B
     wordC=wordC + C
     wordD=wordD + D
+
 digest=[]
 digest.append(wordA)      #output is in little-endian
 digest.append(wordB)
@@ -119,3 +136,4 @@ digest.append(wordC)
 digest.append(wordD)
 for each in digest:
     print(format(each,'x'))
+    print('\n')

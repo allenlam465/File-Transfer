@@ -10,5 +10,3 @@ k=[]
 for i in range (0,64):
     k.append(hex(floor((abs(sin(i+1)))*2**32)))
     print(k[i])
-
-
