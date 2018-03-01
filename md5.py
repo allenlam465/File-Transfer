@@ -64,6 +64,7 @@ INSERTIONBITS=64
 #input containers declarations
 with open("data.txt","rb") as file:
     data=file.read()
+    data=str.encode(data,'utf-8')
     print(data)
     data+=b'1'           #pre-processing:adding a single 1 bit  
     eofPosition=len(data)
