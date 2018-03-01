@@ -46,12 +46,17 @@ def leftRotate (x,c):
     return (x << c) | (x >> (32-c))
 
 #bytesToInt
-def bytesToInt(byte):
+def bytesToInt(byteStr):
     print("bytestoINt")
-    print(type(byte))
-    print(byte)
-    print(int.from_bytes(byte, byteorder='little', signed=False))
-    return int.from_bytes(byte, byteorder='little', signed=False)
+    print(type(byteStr))
+    print("byteStr")
+    print(byteStr)
+    print(int(byteStr,2))
+    #hexval="0x%x"%(int(byteStr,2))
+    hexval=hex(int(byteStr,2))
+    print("hexval")
+    print(type(int(byteStr,2)))
+    return hexval
 
 def str2Bin(string):
     return ''.join(format(ord(x),'b') for x in string)
@@ -66,22 +71,22 @@ INSERTIONBITS=64
 #input containers declarations
 with open("data.txt","r") as file:
     data=file.read()
+    print(data)
     data=str2Bin(data)
-    print(type(data))
-    data+='1'           #pre-processing:adding a single 1 bit  
+    print("data")
+    print(data)
     ogDataLen=len(data)
-    eofPosition=ogDataLen
+    data+='1'           #pre-processing:adding a single 1 bit  
+    eofPosition=ogDataLen+1
     while(eofPosition % BLOCKSIZE1 < 448): #pre-processing: padding with 0's and adding original length in bits to message
         data+='0'
         eofPosition+=1
-    ogLength="{:b}".format(ogDataLen % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
+    print(ogDataLen % 2**INSERTIONBITS)
+    print("ogLength")
+    ogLength="{:064b}".format(ogDataLen % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
     print(ogLength)
     file.close()
-    ogLength=str2Bin(ogLength)
-    print("ogLength")
-    print(ogLength)
     data+=ogLength
-    print(data)
 #Process the message in successive 512-bit chunks:
 chunkBig=data[:BLOCKSIZE1]
 blocks=[]
@@ -101,10 +106,6 @@ for b in blocks:
     B=wordB
     C=wordC
     D=wordD
-    print("A:")
-    print(A)
-    print("B:")
-    print(B)
 #Main Loop
     for i in range(0,64):
         if 0 <= i <= 15:
@@ -119,15 +120,11 @@ for b in blocks:
         elif 48 <= i <= 63:
             f=I(B,C,D) 
             g=(7*i) % 16
-        print("f")
         f=f+A+int(kTable[i],16)+bytesToInt(M[g])
-        print((M[g]))
         A=D
         D=C
         C=B
         B=B+leftRotate(f,shiftAmounts[i])
-        print("C is:")
-        print(C)
 #Add this chunk's hash to result so far:
     wordA=wordA + A
     wordB=wordB + B
