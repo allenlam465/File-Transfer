@@ -3,14 +3,6 @@
 
 #MD5 helper functions #####################################################
 
-# the buffer
-# MD5 uses a buffer that is made up of four words that are each 32 bits long
-
-wordA = 0x67452301
-wordB = 0xefcdab89
-wordC = 0x98badcfe
-wordD = 0x10325476
-print(type(wordA))
 # the table
 # MD5 uses a table K that has 64 elements. The table is computed beforehand to speed up the computations. The elements are computing using the mathematical sin function: K=abs(sin(i+1))*2^32
 # computed this and have a table for it saved (KTable.txt)
@@ -26,6 +18,14 @@ shiftAmounts = [
     4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
     6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21
 ]
+
+# the buffer
+# MD5 uses a buffer that is made up of four words that are each 32 bits long
+
+wordA = 0x67452301
+wordB = 0xefcdab89
+wordC = 0x98badcfe
+wordD = 0x10325476
 
 # Four Auxiliary Functions
 # Each of these functions take three 32-bit words and produce output of one 32 bit word. They apply logical operators to the inputted bits
@@ -56,18 +56,13 @@ def leftRotate(x, c):
 
 
 def bytesToInt(byte):
-    print("bytestoINT")
+    print("bytestoINt")
     print(type(byte))
     print(byte)
-<<<<<<< HEAD
-    print(int.from_byte(byte, byteorder='big', signed=False))
-    return int.from_byte(byte, byteorder='big', signed=False)
+    print(int.from_bytes(byte, byteorder='big', signed=False))
+    return int.from_bytes(byte, byteorder='big', signed=False)
 
 
-=======
-    print(int.from_bytes(byte, byteorder='little', signed=False))
-    return int.from_bytes(byte, byteorder='little', signed=False)
->>>>>>> 306c73295177e97783ce05dd954c98ddc46fc288
 #preparing the input####################################################
     # tokenize input
     # split it into 512 bits
@@ -77,24 +72,25 @@ BLOCKSIZE2 = 32
 INSERTIONBITS = 64
 
 # input containers declarations
-# Start of program
 with open("data.txt", "rb") as file:
     data = file.read()
-    print("The Data: ")
+    data = ' '.join(format(x, 'b') for x in bytearray(data))
     print(data)
-    data += b'1'  # pre-processing:adding a single 1 bit
+    data += "1"  # pre-processing:adding a single 1 bit
+    print(data)
+
     eofPosition = len(data)
     # pre-processing: padding with 0's and adding original length in bits to message
     while(eofPosition % BLOCKSIZE1 < 448):
-        data += b'0'
+        data += "0"
         eofPosition += 1
     # original length in bits mod 2^64 ***not sure about thispart
     ogLength = "{:b}".format(eofPosition % 2**INSERTIONBITS)
-    print(ogLength)
     file.close()
     ogLength = bytes(ogLength, 'utf-8')
-    data += ogLength
-    print("The data: ")
+    print("The ogLength")
+    print(ogLength)
+    data += ogLength.decode("utf-8")
     print(data)
 # Process the message in successive 512-bit chunks:
 chunkBig = data[:BLOCKSIZE1]
