@@ -1,139 +1,153 @@
 #!/usr/bin/env python
-#MD5 with reference to https://en.wikipedia.org/wiki/MD5
+# MD5 with reference to https://en.wikipedia.org/wiki/MD5
 
 #MD5 helper functions #####################################################
 
-#the buffer
-#MD5 uses a buffer that is made up of four words that are each 32 bits long
+# the buffer
+# MD5 uses a buffer that is made up of four words that are each 32 bits long
 
-wordA=0x67452301
-wordB=0xefcdab89
-wordC=0x98badcfe
-wordD=0x10325476
+wordA = 0x67452301
+wordB = 0xefcdab89
+wordC = 0x98badcfe
+wordD = 0x10325476
 print(type(wordA))
-#the table
-#MD5 uses a table K that has 64 elements. The table is computed beforehand to speed up the computations. The elements are computing using the mathematical sin function: K=abs(sin(i+1))*2^32
-#computed this and have a table for it saved (KTable.txt)
-#creating K table for MD5 algorithm
-kTable=[]
-kvalue=open("KTable.txt")
+# the table
+# MD5 uses a table K that has 64 elements. The table is computed beforehand to speed up the computations. The elements are computing using the mathematical sin function: K=abs(sin(i+1))*2^32
+# computed this and have a table for it saved (KTable.txt)
+# creating K table for MD5 algorithm
+kTable = []
+kvalue = open("KTable.txt")
 for each in kvalue:
     kTable.append(each)
 
-shiftAmounts=[
-        7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
-        5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
-        4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
-        6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21
-        ]
+shiftAmounts = [
+    7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
+    5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
+    4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
+    6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21
+]
 
-#Four Auxiliary Functions
-#Each of these functions take three 32-bit words and produce output of one 32 bit word. They apply logical operators to the inputted bits
+# Four Auxiliary Functions
+# Each of these functions take three 32-bit words and produce output of one 32 bit word. They apply logical operators to the inputted bits
 
-def F(x,y,z):
-    return (x&y) | ((~x) & z)
 
-def G(x,y,z):
-    return (x&z) | (y & (~z))
+def F(x, y, z):
+    return (x & y) | ((~x) & z)
 
-def H(x,y,z):
-    return x^y^z
 
-def I(x,y,z):
-    return y^(x | ~(z))
+def G(x, y, z):
+    return (x & z) | (y & (~z))
 
-#leftrotate function definition
-def leftRotate (x,c):
-    return (x << c) | (x >> (32-c))
 
-#bytesToInt
+def H(x, y, z):
+    return x ^ y ^ z
+
+
+def I(x, y, z):
+    return y ^ (x | ~(z))
+
+# leftrotate function definition
+
+
+def leftRotate(x, c):
+    return (x << c) | (x >> (32 - c))
+
+# bytesToInt
+
+
 def bytesToInt(byte):
-    print("bytestoINt")
+    print("bytestoINT")
     print(type(byte))
     print(byte)
-    print(int.from_bytes('0000000', byteorder='big', signed=False))
-    return int.from_bytes(byte, byteorder='big', signed=False)
+    print(int.from_byte(byte, byteorder='big', signed=False))
+    return int.from_byte(byte, byteorder='big', signed=False)
+
 
 #preparing the input####################################################
-    #tokenize input
-    #split it into 512 bits
-#constant declarations
-BLOCKSIZE1=512
-BLOCKSIZE2=32
-INSERTIONBITS=64
+    # tokenize input
+    # split it into 512 bits
+# constant declarations
+BLOCKSIZE1 = 512
+BLOCKSIZE2 = 32
+INSERTIONBITS = 64
 
-#input containers declarations
-with open("data.txt","rb") as file:
-    data=file.read()
+# input containers declarations
+# Start of program
+with open("data.txt", "rb") as file:
+    data = file.read()
+    print("The Data: ")
     print(data)
-    data+=b'1'           #pre-processing:adding a single 1 bit  
-    eofPosition=len(data)
-    while(eofPosition % BLOCKSIZE1 < 448): #pre-processing: padding with 0's and adding original length in bits to message
-        data+=b'0'
-        eofPosition+=1
-    ogLength="{:b}".format(eofPosition % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
+    data += b'1'  # pre-processing:adding a single 1 bit
+    eofPosition = len(data)
+    # pre-processing: padding with 0's and adding original length in bits to message
+    while(eofPosition % BLOCKSIZE1 < 448):
+        data += b'0'
+        eofPosition += 1
+    # original length in bits mod 2^64 ***not sure about thispart
+    ogLength = "{:b}".format(eofPosition % 2**INSERTIONBITS)
     print(ogLength)
     file.close()
-    ogLength=bytes(ogLength,'utf-8')
-    data+=ogLength
+    ogLength = bytes(ogLength, 'utf-8')
+    data += ogLength
+    print("The data: ")
     print(data)
-#Process the message in successive 512-bit chunks:
-chunkBig=data[:BLOCKSIZE1]
-blocks=[]
-blockNum=0
+# Process the message in successive 512-bit chunks:
+chunkBig = data[:BLOCKSIZE1]
+blocks = []
+blockNum = 0
 keepGoing = len(data)
 
 while keepGoing > 0:
-    blocks.append(data[blockNum*BLOCKSIZE1:(blockNum+1)*BLOCKSIZE1])
-    keepGoing-=BLOCKSIZE1
+    blocks.append(data[blockNum * BLOCKSIZE1:(blockNum + 1) * BLOCKSIZE1])
+    keepGoing -= BLOCKSIZE1
 for b in blocks:
-    M=[]
+    M = []
     for j in range(0, 16):
-        chunkSmall=b[j*BLOCKSIZE2:(j+1)*BLOCKSIZE2]
+        chunkSmall = b[j * BLOCKSIZE2:(j + 1) * BLOCKSIZE2]
         M.append(chunkSmall)
-#intialize hash value for this chunk:
-    A=wordA
-    B=wordB
-    C=wordC
-    D=wordD
+# intialize hash value for this chunk:
+    A = wordA
+    B = wordB
+    C = wordC
+    D = wordD
     print("A:")
     print(A)
     print("B:")
     print(B)
-#Main Loop
-    for i in range(0,64):
+# Main Loop
+    for i in range(0, 64):
         if 0 <= i <= 15:
-            f=F(B,C,D) 
-            g=i
+            f = F(B, C, D)
+            g = i
         elif 16 <= i <= 31:
-            f=F(D,B,C) 
-            g=(5*i + 1) % 16
+            f = F(D, B, C)
+            g = (5 * i + 1) % 16
         elif 32 <= i <= 47:
-            f=H(B,C,D) 
-            g=(3*i + 5) % 16
+            f = H(B, C, D)
+            g = (3 * i + 5) % 16
         elif 48 <= i <= 63:
-            f=I(B,C,D) 
-            g=(7*i) % 16
+            f = I(B, C, D)
+            g = (7 * i) % 16
         print("f")
-        f=f+A+int(kTable[i],16)+bytesToInt(M[g])
+        f = f + A + int(kTable[i], 16) + bytesToInt(M[g])
         print((M[g]))
-        A=D
-        D=C
-        C=B
-        B=B+leftRotate(f,shiftAmounts[i])
+        A = D
+        D = C
+        C = B
+        B = B + leftRotate(f, shiftAmounts[i])
         print("C is:")
         print(C)
-#Add this chunk's hash to result so far:
-    wordA=wordA + A
-    wordB=wordB + B
-    wordC=wordC + C
-    wordD=wordD + D
+# Add this chunk's hash to result so far:
+    wordA = wordA + A
+    wordB = wordB + B
+    wordC = wordC + C
+    wordD = wordD + D
 
-digest=[]
-digest.append(wordA)      #output is in little-endian
+digest = []
+digest.append(wordA)  # output is in little-endian
 digest.append(wordB)
 digest.append(wordC)
 digest.append(wordD)
 for each in digest:
-    print(format(each,'x'))
+    print(format(each, 'x'))
     print('\n')
