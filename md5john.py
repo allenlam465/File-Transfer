@@ -30,7 +30,7 @@ shiftAmounts=[
 #Each of these functions take three 32-bit words and produce output of one 32 bit word. They apply logical operators to the inputted bits
 
 def F(x,y,z):
-    return (x&y) | ((~x) & z)
+    return (x&y)|((~x)&z) 
 
 def G(x,y,z):
     return (x&z) | (y & (~z))
@@ -43,20 +43,12 @@ def I(x,y,z):
 
 #leftrotate function definition
 def leftRotate (x,c):
-    return (x << c) | (x >> (32-c))
+    x&=0xffffffff
+    return ((x << c) | (x >> (32-c))) & 0xffffffff
 
 #bytesToInt
 def bytesToInt(byteStr):
-    print("bytestoINt")
-    print(type(byteStr))
-    print("byteStr")
-    print(byteStr)
-    print(int(byteStr,2))
-    #hexval="0x%x"%(int(byteStr,2))
-    hexval=hex(int(byteStr,2))
-    print("hexval")
-    print(type(int(byteStr,2)))
-    return hexval
+    return (int(byteStr,2))
 
 def str2Bin(string):
     return ''.join(format(ord(x),'b') for x in string)
@@ -67,75 +59,57 @@ def str2Bin(string):
 BLOCKSIZE1=512
 BLOCKSIZE2=32
 INSERTIONBITS=64
+def md5():
+    #input containers declarations
+    with open("data.txt","r") as file:
+        data=file.read()
+        data=b"The quick brown fox jumps over the lazy dog"
+        data=bytearray(data)
+        ogLengthInBits=(8*len(data)) & 0xffffffffffffffff
+        data.append(0x80) #pre-processing:adding a single 1 bit 
+        
+        while len(data)%64 != 56: #pre-processing: padding with 0's and adding original length in bits to message
+            data.append(0)
+        file.close()
 
-#input containers declarations
-with open("data.txt","r") as file:
-    data=file.read()
-    print(data)
-    data=str2Bin(data)
-    print("data")
-    print(data)
-    ogDataLen=len(data)
-    data+='1'           #pre-processing:adding a single 1 bit  
-    eofPosition=ogDataLen+1
-    while(eofPosition % BLOCKSIZE1 < 448): #pre-processing: padding with 0's and adding original length in bits to message
-        data+='0'
-        eofPosition+=1
-    print(ogDataLen % 2**INSERTIONBITS)
-    print("ogLength")
-    ogLength="{:064b}".format(ogDataLen % 2**INSERTIONBITS)    #original length in bits mod 2^64 ***not sure about thispart
-    print(ogLength)
-    file.close()
-    data+=ogLength
-#Process the message in successive 512-bit chunks:
-chunkBig=data[:BLOCKSIZE1]
-blocks=[]
-blockNum=0
-keepGoing = len(data)
+    data+=ogLengthInBits.to_bytes(8, byteorder='little')
+    hParts=[wordA,wordB,wordC,wordD]
+    keepGoing = len(data)
 
-while keepGoing > 0:
-    blocks.append(data[blockNum*BLOCKSIZE1:(blockNum+1)*BLOCKSIZE1])
-    keepGoing-=BLOCKSIZE1
-for b in blocks:
-    M=[]
-    for j in range(0, 16):
-        chunkSmall=b[j*BLOCKSIZE2:(j+1)*BLOCKSIZE2]
-        M.append(chunkSmall)
-#intialize hash value for this chunk:
-    A=wordA
-    B=wordB
-    C=wordC
-    D=wordD
-#Main Loop
-    for i in range(0,64):
-        if 0 <= i <= 15:
-            f=F(B,C,D) 
-            g=i
-        elif 16 <= i <= 31:
-            f=F(D,B,C) 
-            g=(5*i + 1) % 16
-        elif 32 <= i <= 47:
-            f=H(B,C,D) 
-            g=(3*i + 5) % 16
-        elif 48 <= i <= 63:
-            f=I(B,C,D) 
-            g=(7*i) % 16
-        f=f+A+int(kTable[i],16)+bytesToInt(M[g])
-        A=D
-        D=C
-        C=B
-        B=B+leftRotate(f,shiftAmounts[i])
-#Add this chunk's hash to result so far:
-    wordA=wordA + A
-    wordB=wordB + B
-    wordC=wordC + C
-    wordD=wordD + D
+    for blocks in range(0,keepGoing,64):
+    #intialize hash value for this chunk:
+        A,B,C,D = hParts
+        block=data[blocks:blocks+64]
+    #Main Loop
+        for i in range(0,64):
+            if 0 <= i <= 15:
+                f=F(B,C,D) 
+                g=i
+            elif 16 <= i <= 31:
+                f=F(D,B,C) 
+                g=(5*i + 1) % 16
+            elif 32 <= i <= 47:
+                f=H(B,C,D) 
+                g=(3*i + 5) % 16
+            elif 48 <= i <= 63:
+                f=I(B,C,D) 
+                g=(7*i) % 16
+            rotateThis=f+A+int(kTable[i],16)+int.from_bytes(block[4*g:4*g+4],byteorder='little')
+            newB=(B+leftRotate(rotateThis,shiftAmounts[i])) & 0xffffffff
+            A,B,C,D=D,newB,B,C
+    #Add this chunk's hash to result so far:
+        for i, val in enumerate([A,B,C,D]):
+            hParts[i]+=val
+            hParts[i]&=0xffffffff
+        digest=[]
+        digest=sum(x<<(32*i) for i, x in enumerate(hParts))
+   # for each in digest:
+   # print(format(each,'x'))
+   # print('\n')
+    return digest
 
-digest=[]
-digest.append(wordA)      #output is in little-endian
-digest.append(wordB)
-digest.append(wordC)
-digest.append(wordD)
-for each in digest:
-    print(format(each,'x'))
-    print('\n')
+def md5ToHex(digest):
+    raw=digest.to_bytes(16,byteorder='little')
+    return '{:032x}'.format(int.from_bytes(raw, byteorder='big'))
+
+print(md5ToHex(md5()))
