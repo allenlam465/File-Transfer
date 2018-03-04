@@ -2,51 +2,100 @@
 
 import socket
 import getpass
+import hashlib
+import md5
 
 
-def login():
-    user = input("Username: ")
-    pw = getpass.getpass()
-    token = user + "/" + pw
-    return token
+class Client:
 
+    server = None
+    host = None
+    port = None
 
-# Start socket protocols
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = socket.gethostname()  # Obtain host name
-port = 12345  # Port that it uses
+    def __init__(self):  # creates the class object.
+        pass
 
+    def startSocket(self):
+        # Start socket protocols
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.host = socket.gethostname()  # Obtain host name
+        self.port = 12345  # Port that it uses
 
-server.settimeout(10)
-# Connection with host and port eg. 123.00.000.00:12345
-server.connect((host, port))
+        self.server.settimeout(10)
+        # Connection with host and port eg. 123.00.000.00:12345
+        self.server.connect((self.host, self.port))
 
-while True:
-    token = login()
-    server.send(bytes(token, 'utf-8'))  # sends login token user/pass
+    def login_user(self):
+        user = input("Username: ")
+        return user
 
-    # recieve confirmation of successful login
-    accept = (server.recv(1024).decode('utf-8')).strip()
+    def login_password(self, salt):
+        pw = getpass.getpass()
+        hashed_password = hashlib.sha512((pw + salt).encode()).hexdigest()
+        return hashed_password
 
-    if accept == "1":
-        # Print recieved from server up to 1024 bytes
-        print(server.recv(1024).decode('utf-8'))
+    def sendMessage(self, message):
+        self.server.send(bytes(message, 'utf-8'))
 
-        fileName = input("File: ")
+    def recvMessage(self):
+        return self.server.recv(1024).decode('utf-8')
 
+    def md5(self, fileName):
+        return runMD5(fileName)
+
+    def sendFile(self, fileName, fileStream, asciiArmor):
         fstream = open(fileName, 'rb')
-        sent = fstream.read(1024)
-        while(sent):
-            server.send(sent)
-            print('Sent ', repr(sent))
-            sent = fstream.read(1024)
-        break
-    elif accept == "-1":
-        print(server.recv(1024).decode('utf-8'))
-        break
-    else:
-        print(server.recv(1024).decode('utf-8'))
-        print("Invalid login information.")  # Sends message back to client
+        sent = fstream.read(fileStream)
 
-server.send(bytes("Sender closing connection.", 'utf-8'))
-server.close  # Close connection
+        if(asciiArmor == 1):
+
+        else:
+            while(sent):
+                self.server.send(sent)
+                print('Sent ', repr(sent))
+                sent = fstream.read(fileStream)
+
+    def clientClose(self):
+        self.server.send(bytes("Sender closing connection.", 'utf-8'))
+        self.server.close  # Close connection
+
+    def main(self):
+        while True:
+            user_token = self.login_user()
+            # send username to check if it exists
+            self.sendMessage(user_token)
+
+            # receive password salt for that username
+            salt = (self.recvMessage()).strip()
+
+            if salt != "0":
+                pw_token = self.login_password(salt)
+
+                # send hashed pw to authenticate
+                self.sendMessage(pw_token)
+                print("attempting to login...")
+
+                # recieve confirmation of successful login
+            else:
+                accept = "0"
+
+            accept = self.recvMessage().strip()
+
+            if accept == "1":
+                # Print received from server up to 1024 bytes
+                print(self.recvMessage())
+
+                fileName = input("File: ")
+                fileStream = int(input("Packet Length: "))
+                self.sendFile(fileName, fileStream)
+                break
+            elif accept == "-1":
+                print(self.recvMessage())
+                break
+            else:
+                print(self.recvMessage())
+                # Sends message back to client
+                print("Invalid login information.")
+
+            print(self.recvMessage())
+            self.clientClose()
