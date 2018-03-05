@@ -14,7 +14,6 @@ class Client:
     server = None
     host = None
     port = None
-    tries = 0
 
     def __init__(self):  # creates the class object.
         pass
@@ -88,36 +87,59 @@ class Client:
 
             accept = self.recvMessage().strip()
 
+            tries = 3
             if accept == "1":
+
                 print(self.recvMessage())
 
                 fileName = input("File: ")
                 fileStream = int(input("Packet Length: "))
 
-                print("Applying MD5...")
-                md5 = self.getMD5Key(fileName)
-                md5 = self.xorCipherString(md5)
+                while(tries != 0):
+                    print("Applying MD5...")
+                    md5 = self.getMD5Key(fileName)
+                    md5 = self.xorCipherString(md5)
 
-                self.sendMessage(md5)
-                print("Finished!")
+                    failure = input(
+                        "Would you like failure to occur?  (Y | N)").strip()
 
-                print("XOR Cipher on file...")
-                self.xorFile(fileName)
-                print("Finished!")
+                    if(failure == "Y"):
+                        self.sendMessage(md5 + "failure")
+                    else:
+                        self.sendMessage(md5)
+                    print("Finished!")
 
-                asciiArmor = input("Would you like to ASCII Armor? (Y | N)")
+                    print("XOR Cipher on file...")
+                    self.xorFile(fileName)
+                    print("Finished!")
 
-                if(asciiArmor == "Y"):
-                    print("Applying ASCII armoring...")
-                    self.sendMessage("1")
-                    self.asciiArmor("xor" + fileName)
-                    print("Applied armoring.")
-                    print("Sending file.")
-                    self.sendFile("ascii_armored.txt", fileStream)
-                    print("Sent.")
-                else:
-                    self.sendMessage("0")
-                    self.sendFile("xor" + fileName, fileStream)
+                    asciiArmor = input(
+                        "Would you like to ASCII Armor? (Y | N)")
+
+                    if(asciiArmor == "Y"):
+                        print("Applying ASCII armoring...")
+                        self.sendMessage("1")
+                        self.asciiArmor("xor" + fileName)
+                        print("Applied armoring.")
+                        print("Sending file.")
+                        self.sendFile("ascii_armored.txt", fileStream)
+                        print("Sent.")
+                    else:
+                        self.sendMessage("0")
+                        print("Sending file.")
+                        self.sendFile("xor" + fileName, fileStream)
+                        print("Sent.")
+
+                    success = self.recvMessage().strip()
+
+                    print(success)
+
+                    if(success == "1"):
+                        print("Successful transfer.")
+                        break
+                    else:
+                        print("Transfer failure.")
+                        tries -= 1
                 break
             elif accept == "-1":
                 print(self.recvMessage())
@@ -127,4 +149,8 @@ class Client:
                 # Sends message back to client
                 print("Invalid login information.")
 
-            self.clientClose()
+        # print("GOT OUT")
+        # time.sleep(8)
+        # print(self.recvMessage())
+        # self.sendMessage("Client closing connections.")
+        self.clientClose()

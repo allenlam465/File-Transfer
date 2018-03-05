@@ -72,7 +72,9 @@ class Server:
         return md5ToHex(md5(fileName))
 
     def md5Integrity(self):
-        return self.md5 == self.md5Recv
+        print(self.md5)
+        print(self.md5Recv)
+        return str(self.md5) == str(self.md5Recv)
 
     def xorCipherString(self, string):
         return xorString(string, "key.txt")
@@ -118,17 +120,17 @@ class Server:
                 print("Checking authorization.")
 
             if(self.checkAuthen(token)):
-                while True:
+                client.send(bytes("1", 'utf-8'))
+                time.sleep(0.25)
 
-                    client.send(bytes("1", 'utf-8'))
-                    time.sleep(0.25)
-
-                    client.send(bytes("Thank you for connecting.", 'utf-8'))
-
-                    md5Recv = client.recv(1024).decode('utf-8')
-                    md5Recv = self.xorCipherString(md5Recv)
+                client.send(bytes("Thank you for connecting.", 'utf-8'))
+                while (tries != 0):
+                    self.md5Recv = client.recv(1024).decode('utf-8')
+                    self.md5Recv = self.xorCipherString(self.md5Recv)
 
                     armored = (client.recv(1024).decode('utf-8')).strip()
+
+                    print(armored)
 
                     if(armored == "1"):
                         client.settimeout(5)
@@ -137,7 +139,7 @@ class Server:
                             with open('received_file', 'wb') as f:
                                 print("Opened file.")
                                 while True:
-                                    data = client.recv(1024)
+                                    data = client.recv(512)
                                     if not data:
                                         break
                                     f.write(data)
@@ -150,11 +152,9 @@ class Server:
                             print("Finished.")
 
                             print("Applying MD5.")
-                            md5 = self.getMD5Key"xorbyte_decoded")
+                            self.md5 = self.getMD5Key("xorbyte_decoded")
                             print("Finished.")
 
-                            print("Was integrity kept?")
-                            print(self.md5Integrity())
                         except socket.timeout:
                             self.asciiArmorDecode('received_file')
                             print("ASCII armoring was removed.")
@@ -164,34 +164,49 @@ class Server:
                             print("Finished.")
 
                             print("Applying MD5.")
-                            md5=self.getMD5Key("byte_decoded")
+                            self.md5 = self.getMD5Key('received_file')
                             print("Finished.")
-
-                            print("Was integrity kept?")
-                            print(self.md5Integrity())
                     else:
                         print("ASCII armoring was not applied.")
-                        with open('received_file', 'wb') as f:
-                            print("Opened file.")
-                            while True:
-                                data=client.recv(1024)
-                                if not data:
-                                    break
-                                f.write(data)
-                        f.close()
 
-                        print("Applying XOR cipher.")
-                        self.xorFile('received_file')
-                        print("Finished.")
+                        client.settimeout(5)
+                        try:
+                            with open('received_file', 'wb') as f:
+                                print("Opened file.")
+                                while True:
+                                    data = client.recv(1024)
+                                    if not data:
+                                        break
+                                    f.write(data)
+                            f.close()
 
-                        print("Applying XOR cipher.")
-                        md5=self.getMD5Key('received_file')
-                        print("Finished.")
+                            print("Applying XOR cipher.")
+                            self.xorFile('received_file')
+                            print("Finished.")
 
-                        print("Was integrity kept?")
-                        print(self.md5Integrity())
+                            print("Applying MD5.")
+                            self.md5 = self.getMD5Key('received_file')
+                            print("Finished.")
 
-                    break
+                        except socket.timeout:
+                            print("Applying XOR cipher.")
+                            self.xorFile('received_file')
+                            print("Finished.")
+
+                            print("Applying MD5.")
+                            self.md5 = self.getMD5Key('received_file')
+                            print("Finished.")
+
+                    print("Checking MD5.")
+
+                    success = self.md5Integrity()
+                    print(success)
+                    if(success):
+                        client.send(bytes("1", 'utf-8'))
+                        break
+                    else:
+                        client.send(bytes("0", 'utf-8'))
+                        tries -= 1
                 break
             else:
                 tries -= 1
@@ -202,7 +217,10 @@ class Server:
                     break
                 else:
                     client.send(bytes("0", 'utf-8'))
-                    line="Number tries left: " + str(tries)
+                    line = "Number tries left: " + str(tries)
                     client.send(bytes(line, 'utf-8'))
 
+        # print("GOT OUT")
+        # client.send(bytes("Server closing connection.", 'utf-8'))
+        # print((client.recv(1024).decode('utf-8')))
         self.serverClose()
