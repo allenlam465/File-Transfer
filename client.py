@@ -3,7 +3,9 @@
 import socket
 import getpass
 import hashlib
-import md5
+import time
+from md5 import md5, md5ToHex
+from xorcipher import encodeDecodeFile, xorString
 
 
 class Client:
@@ -11,6 +13,7 @@ class Client:
     server = None
     host = None
     port = None
+    tries = 0
 
     def __init__(self):  # creates the class object.
         pass
@@ -40,23 +43,27 @@ class Client:
     def recvMessage(self):
         return self.server.recv(1024).decode('utf-8')
 
-    def md5(self, fileName):
-        return runMD5(fileName)
-
-    def sendFile(self, fileName, fileStream, asciiArmor):
+    def sendFile(self, fileName, fileStream):
         fstream = open(fileName, 'rb')
         sent = fstream.read(fileStream)
+        while(sent):
+            print(sent)
+            self.server.send(sent)
+            sent = fstream.read(fileStream)
 
-        if(asciiArmor == 1):
+    def getMD5Key(self, fileName):
+        return md5ToHex(md5(fileName))
 
-        else:
-            while(sent):
-                self.server.send(sent)
-                print('Sent ', repr(sent))
-                sent = fstream.read(fileStream)
+    def xorCipherString(self, string):
+        return xorString(string, "key.txt")
+
+    def xorFile(self, fileName):
+        encodeDecodeFile(fileName, "xor" + fileName, "key.txt")
+
+    def utf8len(s):
+        return len(s.encode('utf-8'))
 
     def clientClose(self):
-        self.server.send(bytes("Sender closing connection.", 'utf-8'))
         self.server.close  # Close connection
 
     def main(self):
@@ -82,12 +89,21 @@ class Client:
             accept = self.recvMessage().strip()
 
             if accept == "1":
-                # Print received from server up to 1024 bytes
                 print(self.recvMessage())
 
                 fileName = input("File: ")
                 fileStream = int(input("Packet Length: "))
-                self.sendFile(fileName, fileStream)
+
+                md5 = self.getMD5Key(fileName)
+                print(md5)
+                md5 = self.xorCipherString(md5)
+                print(md5)
+
+                self.sendMessage(md5)
+
+                self.xorFile(fileName)
+
+                self.sendFile("xor" + fileName, fileStream)
                 break
             elif accept == "-1":
                 print(self.recvMessage())
@@ -97,5 +113,4 @@ class Client:
                 # Sends message back to client
                 print("Invalid login information.")
 
-            print(self.recvMessage())
             self.clientClose()

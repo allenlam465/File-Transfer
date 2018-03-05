@@ -5,6 +5,8 @@ import getpass
 import hashlib
 import crypt
 import time
+from md5 import md5, md5ToHex
+from xorcipher import encodeDecodeFile, xorString
 
 
 class Server:
@@ -12,6 +14,8 @@ class Server:
     server = None
     host = None
     port = None
+    md5 = None
+    md5Recv = None
 
     def __init__(self):  # creates the class object.
         pass
@@ -60,6 +64,21 @@ class Server:
         print("Invalid username or password.")
         return False
 
+    def utf8len(s):
+        return len(s.encode('utf-8'))
+
+    def getMD5Key(self, fileName):
+        return md5ToHex(md5(fileName))
+
+    def md5Integrity(self):
+        return self.md5 == self.md5Recv
+
+    def xorCipherString(self, string):
+        return xorString(string, "key.txt")
+
+    def xorFile(self, fileName):
+        encodeDecodeFile(fileName, "xor" + fileName, "key.txt")
+
     def serverClose(self):
         self.server.close()  # Close server
 
@@ -96,23 +115,28 @@ class Server:
 
             if(self.checkAuthen(token)):
                 while True:
-                    # Sends message back to client
+
                     client.send(bytes("1", 'utf-8'))
-                    # had to wait before sending next message
-                    # if not, both messages read together
                     time.sleep(0.25)
+
                     client.send(bytes("Thank you for connecting.", 'utf-8'))
+
+                    md5Recv = client.recv(1024).decode('utf-8')
+                    md5Recv = self.xorCipherString(md5Recv)
 
                     with open('received_file', 'wb') as f:
                         print("Opened file.")
                         while True:
-                            print('Receiving data...')
                             data = client.recv(1024)
-                            print('data=%s', (data))
                             if not data:
                                 break
                             f.write(data)
                     f.close()
+
+                    self.xorFile('received_file')
+                    md5 = self.getMD5Key('xorreceived_file')
+
+                    print(self.md5Integrity())
                     break
                 break
             else:
@@ -127,6 +151,4 @@ class Server:
                     line = "Number tries left: " + str(tries)
                     client.send(bytes(line, 'utf-8'))
 
-        client.send(bytes(" Closing connections.", 'utf-8'))
-        print(client.recv(1024).decode('utf-8'))
         self.serverClose()
