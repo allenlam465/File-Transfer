@@ -132,8 +132,6 @@ class Client:
 
                     success = self.recvMessage().strip()
 
-                    print(success)
-
                     if(success == "1"):
                         print("Successful transfer.")
                         break
@@ -149,8 +147,8 @@ class Client:
                 # Sends message back to client
                 print("Invalid login information.")
 
-        # print("GOT OUT")
-        # time.sleep(8)
-        # print(self.recvMessage())
-        # self.sendMessage("Client closing connections.")
+        time.sleep(1)
+        print(self.recvMessage())
+        time.sleep(.5)
+        self.sendMessage("Client closing connections.")
         self.clientClose()

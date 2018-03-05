@@ -125,6 +125,7 @@ class Server:
 
                 client.send(bytes("Thank you for connecting.", 'utf-8'))
                 while (tries != 0):
+                    client.settimeout(20)
                     self.md5Recv = client.recv(1024).decode('utf-8')
                     self.md5Recv = self.xorCipherString(self.md5Recv)
 
@@ -133,7 +134,7 @@ class Server:
                     print(armored)
 
                     if(armored == "1"):
-                        client.settimeout(5)
+                        client.settimeout(2)
                         try:
                             print("ASCII armoring was applied removing.")
                             with open('received_file', 'wb') as f:
@@ -200,7 +201,7 @@ class Server:
                     print("Checking MD5.")
 
                     success = self.md5Integrity()
-                    print(success)
+
                     if(success):
                         client.send(bytes("1", 'utf-8'))
                         break
@@ -220,7 +221,7 @@ class Server:
                     line = "Number tries left: " + str(tries)
                     client.send(bytes(line, 'utf-8'))
 
-        # print("GOT OUT")
-        # client.send(bytes("Server closing connection.", 'utf-8'))
-        # print((client.recv(1024).decode('utf-8')))
+        client.send(bytes("Server closing connection.", 'utf-8'))
+        time.sleep(1)
+        print((client.recv(1024).decode('utf-8')))
         self.serverClose()
