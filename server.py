@@ -131,7 +131,7 @@ class Server:
                     armored = (client.recv(1024).decode('utf-8')).strip()
 
                     if(armored == "1"):
-                        client.settimeout(2)
+                        client.settimeout(5)
                         try:
                             print("ASCII armoring was applied removing.")
                             with open('received_file', 'wb') as f:
@@ -142,16 +142,29 @@ class Server:
                                         break
                                     f.write(data)
                             f.close()
+                            self.asciiArmorDecode('received_file')
+                            print("ASCII armoring was removed.")
+
+                            print("Applying XOR cipher.")
+                            self.xorFile("byte_decoded")
+                            print("Finished.")
+
+                            print("Applying MD5.")
+                            md5 = self.getMD5Key"xorbyte_decoded")
+                            print("Finished.")
+
+                            print("Was integrity kept?")
+                            print(self.md5Integrity())
                         except socket.timeout:
                             self.asciiArmorDecode('received_file')
                             print("ASCII armoring was removed.")
 
                             print("Applying XOR cipher.")
-                            self.xorFile('byte_decoded')
+                            self.xorFile('received_file')
                             print("Finished.")
 
                             print("Applying MD5.")
-                            md5 = self.getMD5Key('byte_decoded')
+                            md5=self.getMD5Key("byte_decoded")
                             print("Finished.")
 
                             print("Was integrity kept?")
@@ -161,7 +174,7 @@ class Server:
                         with open('received_file', 'wb') as f:
                             print("Opened file.")
                             while True:
-                                data = client.recv(1024)
+                                data=client.recv(1024)
                                 if not data:
                                     break
                                 f.write(data)
@@ -172,7 +185,7 @@ class Server:
                         print("Finished.")
 
                         print("Applying XOR cipher.")
-                        md5 = self.getMD5Key('received_file')
+                        md5=self.getMD5Key('received_file')
                         print("Finished.")
 
                         print("Was integrity kept?")
@@ -189,7 +202,7 @@ class Server:
                     break
                 else:
                     client.send(bytes("0", 'utf-8'))
-                    line = "Number tries left: " + str(tries)
+                    line="Number tries left: " + str(tries)
                     client.send(bytes(line, 'utf-8'))
 
         self.serverClose()

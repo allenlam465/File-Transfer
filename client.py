@@ -111,7 +111,10 @@ class Client:
                     print("Applying ASCII armoring...")
                     self.sendMessage("1")
                     self.asciiArmor("xor" + fileName)
+                    print("Applied armoring.")
+                    print("Sending file.")
                     self.sendFile("ascii_armored.txt", fileStream)
+                    print("Sent.")
                 else:
                     self.sendMessage("0")
                     self.sendFile("xor" + fileName, fileStream)
