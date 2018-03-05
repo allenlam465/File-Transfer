@@ -125,7 +125,7 @@ class Server:
 
                 client.send(bytes("Thank you for connecting.", 'utf-8'))
                 while (tries != 0):
-                    client.settimeout(20)
+                    client.settimeout(120)
                     self.md5Recv = client.recv(1024).decode('utf-8')
                     self.md5Recv = self.xorCipherString(self.md5Recv)
 
@@ -152,6 +152,10 @@ class Server:
                             self.xorFile("byte_decoded")
                             print("Finished.")
 
+                            print("Applying XOR cipher.")
+                            self.xorFile("byte_decoded")
+                            print("Finished.")
+
                             print("Applying MD5.")
                             self.md5 = self.getMD5Key("xorbyte_decoded")
                             print("Finished.")
@@ -161,11 +165,15 @@ class Server:
                             print("ASCII armoring was removed.")
 
                             print("Applying XOR cipher.")
-                            self.xorFile('received_file')
+                            self.xorFile("byte_decoded")
+                            print("Finished.")
+
+                            print("Applying XOR cipher.")
+                            self.xorFile("byte_decoded")
                             print("Finished.")
 
                             print("Applying MD5.")
-                            self.md5 = self.getMD5Key('received_file')
+                            self.md5 = self.getMD5Key("xorbyte_decoded")
                             print("Finished.")
                     else:
                         print("ASCII armoring was not applied.")
