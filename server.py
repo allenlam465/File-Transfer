@@ -7,6 +7,7 @@ import crypt
 import time
 from md5 import md5, md5ToHex
 from xorcipher import encodeDecodeFile, xorString
+from ascii_armor import file_to_ascii, ascii_to_file
 
 
 class Server:
@@ -79,6 +80,9 @@ class Server:
     def xorFile(self, fileName):
         encodeDecodeFile(fileName, "xor" + fileName, "key.txt")
 
+    def asciiArmorDecode(self, fileName):
+        ascii_to_file(fileName)
+
     def serverClose(self):
         self.server.close()  # Close server
 
@@ -124,19 +128,56 @@ class Server:
                     md5Recv = client.recv(1024).decode('utf-8')
                     md5Recv = self.xorCipherString(md5Recv)
 
-                    with open('received_file', 'wb') as f:
-                        print("Opened file.")
-                        while True:
-                            data = client.recv(1024)
-                            if not data:
-                                break
-                            f.write(data)
-                    f.close()
+                    armored = (client.recv(1024).decode('utf-8')).strip()
 
-                    self.xorFile('received_file')
-                    md5 = self.getMD5Key('xorreceived_file')
+                    if(armored == "1"):
+                        client.settimeout(2)
+                        try:
+                            print("ASCII armoring was applied removing.")
+                            with open('received_file', 'wb') as f:
+                                print("Opened file.")
+                                while True:
+                                    data = client.recv(1024)
+                                    if not data:
+                                        break
+                                    f.write(data)
+                            f.close()
+                        except socket.timeout:
+                            self.asciiArmorDecode('received_file')
+                            print("ASCII armoring was removed.")
 
-                    print(self.md5Integrity())
+                            print("Applying XOR cipher.")
+                            self.xorFile('byte_decoded')
+                            print("Finished.")
+
+                            print("Applying MD5.")
+                            md5 = self.getMD5Key('byte_decoded')
+                            print("Finished.")
+
+                            print("Was integrity kept?")
+                            print(self.md5Integrity())
+                    else:
+                        print("ASCII armoring was not applied.")
+                        with open('received_file', 'wb') as f:
+                            print("Opened file.")
+                            while True:
+                                data = client.recv(1024)
+                                if not data:
+                                    break
+                                f.write(data)
+                        f.close()
+
+                        print("Applying XOR cipher.")
+                        self.xorFile('received_file')
+                        print("Finished.")
+
+                        print("Applying XOR cipher.")
+                        md5 = self.getMD5Key('received_file')
+                        print("Finished.")
+
+                        print("Was integrity kept?")
+                        print(self.md5Integrity())
+
                     break
                 break
             else:

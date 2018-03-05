@@ -27,9 +27,9 @@ hex_dictionary = {"0": "0000", "1": "0001", "2": "0010", "3": "0011",
                   "c": "1100", "d": "1101", "e": "1110", "f": "1111", }
 
 
-def file_to_ascii():
+def file_to_ascii(fileName):
     bits = ""
-    with open("myfile", "rb") as f:
+    with open(fileName, "rb") as f:
         # read file by byte
         while True:
             byte = f.read(1)
@@ -64,8 +64,8 @@ def mime_encode(binary_input):
     return ret
 
 
-def ascii_to_file():
-    with open("ascii_armored.txt", "r") as f:
+def ascii_to_file(fileName):
+    with open(fileName, "r") as f:
         str_file = f.read()
     hex_string = mime_decode(str_file)
     bytes_to_write = bytearray.fromhex(hex_string)

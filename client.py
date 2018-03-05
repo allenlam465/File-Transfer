@@ -6,6 +6,7 @@ import hashlib
 import time
 from md5 import md5, md5ToHex
 from xorcipher import encodeDecodeFile, xorString
+from ascii_armor import file_to_ascii, mime_encode, ascii_to_file, mime_decode, int_to_bits, binary_to_hex
 
 
 class Client:
@@ -47,7 +48,6 @@ class Client:
         fstream = open(fileName, 'rb')
         sent = fstream.read(fileStream)
         while(sent):
-            print(sent)
             self.server.send(sent)
             sent = fstream.read(fileStream)
 
@@ -60,8 +60,8 @@ class Client:
     def xorFile(self, fileName):
         encodeDecodeFile(fileName, "xor" + fileName, "key.txt")
 
-    def utf8len(s):
-        return len(s.encode('utf-8'))
+    def asciiArmor(self, fileName):
+        file_to_ascii(fileName)
 
     def clientClose(self):
         self.server.close  # Close connection
@@ -94,16 +94,27 @@ class Client:
                 fileName = input("File: ")
                 fileStream = int(input("Packet Length: "))
 
+                print("Applying MD5...")
                 md5 = self.getMD5Key(fileName)
-                print(md5)
                 md5 = self.xorCipherString(md5)
-                print(md5)
 
                 self.sendMessage(md5)
+                print("Finished!")
 
+                print("XOR Cipher on file...")
                 self.xorFile(fileName)
+                print("Finished!")
 
-                self.sendFile("xor" + fileName, fileStream)
+                asciiArmor = input("Would you like to ASCII Armor? (Y | N)")
+
+                if(asciiArmor == "Y"):
+                    print("Applying ASCII armoring...")
+                    self.sendMessage("1")
+                    self.asciiArmor("xor" + fileName)
+                    self.sendFile("ascii_armored.txt", fileStream)
+                else:
+                    self.sendMessage("0")
+                    self.sendFile("xor" + fileName, fileStream)
                 break
             elif accept == "-1":
                 print(self.recvMessage())
