@@ -18,15 +18,19 @@ class Client:
     def __init__(self):  # creates the class object.
         pass
 
-    def startSocket(self):
+    def startSocket(self, ipAddress):
         # Start socket protocols
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host = socket.gethostname()  # Obtain host name
-        self.port = 12345  # Port that it uses
-
-        self.server.settimeout(10)
-        # Connection with host and port eg. 123.00.000.00:12345
-        self.server.connect((self.host, self.port))
+		try:
+			while True:
+        		self.host = ipAddress  # Obtain host name
+        		self.port = 12345  # Port that it uses
+       			self.server.settimeout(10)
+        		self.server.connect((self.host, self.port))
+				break
+		except socket.gaierror:
+			print ("Invalid address try again.)
+			ipAddress = input("Server IP Address: ")
 
     def login_user(self):
         user = input("Username: ")
