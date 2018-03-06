@@ -21,16 +21,16 @@ class Client:
     def startSocket(self, ipAddress):
         # Start socket protocols
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		try:
-			while True:
-        		self.host = ipAddress  # Obtain host name
-        		self.port = 12345  # Port that it uses
-       			self.server.settimeout(10)
-        		self.server.connect((self.host, self.port))
-				break
-		except socket.gaierror:
-			print ("Invalid address try again.)
-			ipAddress = input("Server IP Address: ")
+        self.host = ipAddress  # Obtain host name
+            try:
+                while True:
+                self.port = 12345  # Port that it uses
+                self.server.settimeout(10)
+                self.server.connect((self.host, self.port))
+                    break
+            except socket.gaierror:
+                print("Invalid address try again.)
+                ipAddress = input("Server IP Address: ")
 
     def login_user(self):
         user = input("Username: ")
