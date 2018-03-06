@@ -18,19 +18,23 @@ class Client:
     def __init__(self):  # creates the class object.
         pass
 
-    def startSocket(self, ipAddress):
+    def startSocket(self):
         # Start socket protocols
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        while(True)
-            self.host = ipAddress  # Obtain host name
-            try:
-                self.port = 12345  # Port that it uses
-                self.server.settimeout(10)
-                self.server.connect((self.host, self.port))
-                break
-            except socket.gaierror:
-                print("Invalid address try again.)
-                ipAddress = input("Server IP Address: ")
+        self.host = socket.gethostname()  # Obtain host name
+        self.port = 12345  # Port that it uses
+        self.server.settimeout(10)
+        self.server.connect((self.host, self.port))
+        # while(True):
+        #     self.host = ipAddress  # Obtain host name
+        #     try:
+        #         self.port = 12345  # Port that it uses
+        #         self.server.settimeout(10)
+        #         self.server.connect((self.host, self.port))
+        #         break
+        #     except (socket.gaierror, socket.timeout) as e:
+        #         print("Invalid address try again.")
+        #         ipAddress = input("Server IP Address: ")
 
     def login_user(self):
         user = input("Username: ")
@@ -104,6 +108,10 @@ class Client:
                     md5 = self.getMD5Key(fileName)
                     md5 = self.xorCipherString(md5)
 
+                    print("XOR Cipher on file...")
+                    self.xorFile(fileName)
+                    print("Finished!")
+
                     failure = input(
                         "Would you like failure to occur?  (Y | N)").strip()
 
@@ -111,11 +119,6 @@ class Client:
                         self.sendMessage(md5 + "failure")
                     else:
                         self.sendMessage(md5)
-                    print("Finished!")
-
-                    print("XOR Cipher on file...")
-                    self.xorFile(fileName)
-                    print("Finished!")
 
                     asciiArmor = input(
                         "Would you like to ASCII Armor? (Y | N)")
@@ -135,9 +138,9 @@ class Client:
                         self.sendFile("xor" + fileName, fileStream)
                         print("Sent.")
 
-                    self.server.settimeout(60)
+                    self.server.settimeout(10)
                     while(True):
-                        self.server.settimeout(60)
+                        self.server.settimeout(5)
                         try:
                             success = self.recvMessage().strip()
                             break
@@ -159,8 +162,14 @@ class Client:
                 # Sends message back to client
                 print("Invalid login information.")
 
-        time.sleep(1)
-        print(self.recvMessage())
-        time.sleep(.5)
-        self.sendMessage("Client closing connections.")
+        self.server.settimeout(10)
+        while(True):
+            self.server.settimeout(5)
+            try:
+                print(self.recvMessage())
+                self.sendMessage("Client closing connections.")
+                break
+            except socket.timeout:
+                print("Waiting for response.")
+
         self.clientClose()

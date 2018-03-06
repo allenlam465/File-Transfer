@@ -228,6 +228,13 @@ class Server:
                     client.send(bytes(line, 'utf-8'))
 
         client.send(bytes("Server closing connection.", 'utf-8'))
-        time.sleep(1)
-        print((client.recv(1024).decode('utf-8')))
+        while(True):
+            self.server.settimeout(5)
+            try
+                print((client.recv(1024).decode('utf-8')))
+                self.serverClose()
+                break
+            except socket.timeout:
+                print("Waiting for response.")
+
         self.serverClose()

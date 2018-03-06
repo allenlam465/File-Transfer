@@ -4,7 +4,7 @@ Group - AppleVictims
 Members - Allen Lam, Dylan Nguyen, John Ung, Sai Padmanaban
 Date - 3 - 5 - 2018
 
-File transfer tool using python3 with UDP protocols. 
+File transfer tool using python3 with TCP protocols. 
 
 User will run program using a terminal with: 
 
