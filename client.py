@@ -21,13 +21,13 @@ class Client:
     def startSocket(self, ipAddress):
         # Start socket protocols
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host = ipAddress  # Obtain host name
+        while(True)
+            self.host = ipAddress  # Obtain host name
             try:
-                while True:
                 self.port = 12345  # Port that it uses
                 self.server.settimeout(10)
                 self.server.connect((self.host, self.port))
-                    break
+                break
             except socket.gaierror:
                 print("Invalid address try again.)
                 ipAddress = input("Server IP Address: ")
