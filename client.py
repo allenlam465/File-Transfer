@@ -116,6 +116,7 @@ class Client:
                     asciiArmor = input(
                         "Would you like to ASCII Armor? (Y | N)")
 
+                    # ASCII Armor the chunks instead of file
                     if(asciiArmor == "Y"):
                         print("Applying ASCII armoring...")
                         self.sendMessage("1")
@@ -130,7 +131,14 @@ class Client:
                         self.sendFile("xor" + fileName, fileStream)
                         print("Sent.")
 
-                    success = self.recvMessage().strip()
+                    self.server.settimeout(60)
+                    while(True):
+                        self.server.settimeout(60)
+                        try:
+                            success = self.recvMessage().strip()
+                            break
+                        except socket.timeout:
+                            print("Server taking a long time...")
 
                     if(success == "1"):
                         print("Successful transfer.")

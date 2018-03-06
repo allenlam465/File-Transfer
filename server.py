@@ -131,8 +131,6 @@ class Server:
 
                     armored = (client.recv(1024).decode('utf-8')).strip()
 
-                    print(armored)
-
                     if(armored == "1"):
                         client.settimeout(2)
                         try:
@@ -140,7 +138,7 @@ class Server:
                             with open('received_file', 'wb') as f:
                                 print("Opened file.")
                                 while True:
-                                    data = client.recv(512)
+                                    data = client.recv(1024)
                                     if not data:
                                         break
                                     f.write(data)
@@ -178,7 +176,7 @@ class Server:
                     else:
                         print("ASCII armoring was not applied.")
 
-                        client.settimeout(5)
+                        client.settimeout(60)
                         try:
                             with open('received_file', 'wb') as f:
                                 print("Opened file.")

@@ -10,6 +10,7 @@ import hashlib
 def client():
     print("Starting client....")
     client = Client()
+    ipAddress = input("Server IP Address:")
     client.startSocket()
     client.main()
 
