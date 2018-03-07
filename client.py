@@ -18,6 +18,7 @@ class Client:
     def __init__(self):  # creates the class object.
         pass
 
+    # def startSocket(self,ipAddress)
     def startSocket(self):
         # Start socket protocols
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -100,14 +101,25 @@ class Client:
 
                 print(self.recvMessage())
 
-                fileName = input("File: ")
-                fileStream = int(input("Packet Length: "))
-
                 while(tries != 0):
-                    print("Applying MD5...")
-                    md5 = self.getMD5Key(fileName)
-                    md5 = self.xorCipherString(md5)
 
+                    while(True):
+                        try:
+                            fileName = input("File: ")
+                            fileStream = int(input("Packet Length: "))
+
+                            print("Applying MD5...")
+                            md5 = self.getMD5Key(fileName)
+                            md5 = self.xorCipherString(md5)
+
+                            break
+
+                        except FileNotFoundError:
+                            print("File was not found when hashing. Try again.")
+                        except ValueError:
+                            print("Invalid value for packet length size. Try again.")
+
+                    print("Finished!")
                     print("XOR Cipher on file...")
                     self.xorFile(fileName)
                     print("Finished!")
@@ -115,7 +127,7 @@ class Client:
                     failure = input(
                         "Would you like failure to occur?  (Y | N)").strip()
 
-                    if(failure == "Y"):
+                    if(failure == "Y" or failure == "y"):
                         self.sendMessage(md5 + "failure")
                     else:
                         self.sendMessage(md5)
@@ -124,7 +136,7 @@ class Client:
                         "Would you like to ASCII Armor? (Y | N)")
 
                     # ASCII Armor the chunks instead of file
-                    if(asciiArmor == "Y"):
+                    if(asciiArmor == "Y" or asciiArmor == "y"):
                         print("Applying ASCII armoring...")
                         self.sendMessage("1")
                         self.asciiArmor("xor" + fileName)
@@ -138,7 +150,6 @@ class Client:
                         self.sendFile("xor" + fileName, fileStream)
                         print("Sent.")
 
-                    self.server.settimeout(10)
                     while(True):
                         self.server.settimeout(5)
                         try:

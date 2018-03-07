@@ -72,8 +72,6 @@ class Server:
         return md5ToHex(md5(fileName))
 
     def md5Integrity(self):
-        print(self.md5)
-        print(self.md5Recv)
         return str(self.md5) == str(self.md5Recv)
 
     def xorCipherString(self, string):
@@ -176,11 +174,12 @@ class Server:
                     else:
                         print("ASCII armoring was not applied.")
 
-                        client.settimeout(60)
+                        client.settimeout(1)
                         try:
                             with open('received_file', 'wb') as f:
                                 print("Opened file.")
                                 while True:
+                                    print("Recieving data...")
                                     data = client.recv(1024)
                                     if not data:
                                         break
@@ -209,9 +208,11 @@ class Server:
                     success = self.md5Integrity()
 
                     if(success):
+                        print("Successful transfer.")
                         client.send(bytes("1", 'utf-8'))
                         break
                     else:
+                        print("Failed transfer.")
                         client.send(bytes("0", 'utf-8'))
                         tries -= 1
                 break
@@ -230,7 +231,7 @@ class Server:
         client.send(bytes("Server closing connection.", 'utf-8'))
         while(True):
             self.server.settimeout(5)
-            try
+            try:
                 print((client.recv(1024).decode('utf-8')))
                 self.serverClose()
                 break
