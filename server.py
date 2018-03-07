@@ -10,7 +10,7 @@ import struct
 
 from md5 import md5, md5ToHex
 from xorcipher import encodeDecodeFile, xorString
-from ascii_armor import file_to_ascii, ascii_to_file
+from ascii_armor import file_to_ascii, ascii_to_file, mime_decode, bytes_to_bits
 
 
 class Server:
@@ -150,39 +150,39 @@ class Server:
                 print("Opened file.")
                 while True:
                     data = client.recv(1024)
+                    data = mime_decode(bytes_to_bits(data))
                     if not data:
                         break
                     f.write(data)
             f.close()
-            self.asciiArmorDecode('received_file')
             print("ASCII armoring was removed.")
 
             print("Applying XOR cipher.")
-            self.xorFile("byte_decoded")
+            self.xorFile('byte_decoded')
             print("Finished.")
 
             print("Applying XOR cipher.")
-            self.xorFile("byte_decoded")
+            self.xorFile('byte_decoded')
             print("Finished.")
 
             print("Applying MD5.")
-            self.md5 = self.getMD5Key("xorbyte_decoded")
+            self.md5 = self.getMD5Key('xorbyte_decoded')
             print("Finished.")
 
         except socket.timeout:
-            self.asciiArmorDecode('received_file')
+            asciiArmorDecode('received_file')
             print("ASCII armoring was removed.")
 
             print("Applying XOR cipher.")
-            self.xorFile("byte_decoded")
+            self.xorFile('byte_decoded')
             print("Finished.")
 
             print("Applying XOR cipher.")
-            self.xorFile("byte_decoded")
+            self.xorFile('byte_decoded')
             print("Finished.")
 
             print("Applying MD5.")
-            self.md5 = self.getMD5Key("xorbyte_decoded")
+            self.md5 = self.getMD5Key('xorbyte_decoded')
             print("Finished.")
 
     def successfulTransfer(self, client):
@@ -278,6 +278,7 @@ class Server:
                 while (tries != 0):
                     client.settimeout(120)
 
+                    client.setblocking(1)
                     failure = (client.recv(1024).decode('utf-8')).strip()
 
                     time.sleep(1)
@@ -311,8 +312,8 @@ class Server:
                         break
                     else:
                         print("Failed transfer.")
-                        client.send(bytes("0", 'utf-8'))
                         tries -= 1
+                        client.send(bytes("0", 'utf-8'))
                 break
             else:
                 tries -= 1
