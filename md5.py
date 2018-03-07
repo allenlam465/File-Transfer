@@ -76,7 +76,6 @@ def md5(fileName):
     # input containers declarations
     with open(fileName, "rb") as file:
         data = file.read()
-        data = b"The quick brown fox jumps over the lazy dog"
         data = bytearray(data)
         ogLengthInBits = (8 * len(data)) & 0xffffffffffffffff
         data.append(0x80)  # pre-processing:adding a single 1 bit

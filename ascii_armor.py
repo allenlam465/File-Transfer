@@ -64,6 +64,18 @@ def mime_encode(binary_input):
     return ret
 
 
+def bytes_to_bits(byte_list):
+    bits = ""
+    for byte in byte_list:
+        byte_hex = byte.hex()
+        # split byte into high and low nibbles
+        byte_high = byte_hex[:1]
+        byte_low = byte_hex[1:2]
+        # convert nibbles as hex to bits array
+        bits += hex_dictionary[byte_high] + hex_dictionary[byte_low]
+    return bits
+
+
 def ascii_to_file(fileName):
     with open(fileName, "r") as f:
         str_file = f.read()

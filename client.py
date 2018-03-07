@@ -4,9 +4,10 @@ import socket
 import getpass
 import hashlib
 import time
+import os
 from md5 import md5, md5ToHex
 from xorcipher import encodeDecodeFile, xorString
-from ascii_armor import file_to_ascii, mime_encode, ascii_to_file, mime_decode, int_to_bits, binary_to_hex
+from ascii_armor import file_to_ascii, ascii_to_file, bytes_to_bits
 
 
 class Client:
@@ -54,10 +55,18 @@ class Client:
 
     def sendFile(self, fileName, fileStream):
         fstream = open(fileName, 'rb')
-        sent = fstream.read(fileStream)
+        sent = fstream.read(int(fileStream))
         while(sent):
             self.server.send(sent)
-            sent = fstream.read(fileStream)
+            sent = fstream.read(int(fileStream))
+
+# Change using byte.hex() run to mime encoding then ascii to file the output at server.
+    def sendAFile(self, fileName, fileStream):
+        fstream = open(fileName, 'rb')
+        sent = fstream.read(int(fileStream))
+        while(sent):
+            self.server.send(sent)
+            sent = fstream.read(int(fileStream))
 
     def getMD5Key(self, fileName):
         return md5ToHex(md5(fileName))
@@ -106,11 +115,13 @@ class Client:
                     while(True):
                         try:
                             fileName = input("File: ")
-                            fileStream = int(input("Packet Length: "))
+                            fileStream = input("Packet Length: ")
 
                             print("Applying MD5...")
                             md5 = self.getMD5Key(fileName)
+                            print(md5)
                             md5 = self.xorCipherString(md5)
+                            print("Finished.")
 
                             break
 
@@ -128,9 +139,13 @@ class Client:
                         "Would you like failure to occur?  (Y | N)").strip()
 
                     if(failure == "Y" or failure == "y"):
-                        self.sendMessage(md5 + "failure")
+                        self.sendMessage("1")
                     else:
-                        self.sendMessage(md5)
+                        self.sendMessage("0")
+
+                    time.sleep(1)
+
+                    self.sendMessage(md5)
 
                     asciiArmor = input(
                         "Would you like to ASCII Armor? (Y | N)")
@@ -138,16 +153,16 @@ class Client:
                     # ASCII Armor the chunks instead of file
                     if(asciiArmor == "Y" or asciiArmor == "y"):
                         print("Applying ASCII armoring...")
-                        self.sendMessage("1")
                         self.asciiArmor("xor" + fileName)
+                        self.sendMessage("1")
                         print("Applied armoring.")
                         print("Sending file.")
-                        self.sendFile("ascii_armored.txt", fileStream)
+                        self.sendFile("ascii_armored.txt", int(fileStream))
                         print("Sent.")
                     else:
                         self.sendMessage("0")
                         print("Sending file.")
-                        self.sendFile("xor" + fileName, fileStream)
+                        self.sendFile("xor" + fileName, int(fileStream))
                         print("Sent.")
 
                     while(True):
@@ -156,7 +171,7 @@ class Client:
                             success = self.recvMessage().strip()
                             break
                         except socket.timeout:
-                            print("Server taking a long time...")
+                            print("Waiting for server response...")
 
                     if(success == "1"):
                         print("Successful transfer.")

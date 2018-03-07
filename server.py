@@ -5,6 +5,9 @@ import getpass
 import hashlib
 import crypt
 import time
+import sys
+import struct
+
 from md5 import md5, md5ToHex
 from xorcipher import encodeDecodeFile, xorString
 from ascii_armor import file_to_ascii, ascii_to_file
@@ -65,6 +68,154 @@ class Server:
         print("Invalid username or password.")
         return False
 
+    def totalAFailure(self, client):
+        client.settimeout(2)
+        try:
+            print("ASCII armoring was applied removing.")
+            with open('received_file', 'wb') as f:
+                print("Opened file.")
+                while True:
+                    data = client.recv(1024)
+                    if not data:
+                        break
+                    f.write(data + b'failure')
+            f.close()
+            self.asciiArmorDecode('received_file')
+            print("ASCII armoring was removed.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key("xorbyte_decoded")
+            print("Finished.")
+
+        except socket.timeout:
+            self.asciiArmorDecode('received_file')
+            print("ASCII armoring was removed.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key("xorbyte_decoded")
+            print("Finished.")
+
+    def totalFailure(self, client):
+        print("ASCII armoring was not applied.")
+
+        client.settimeout(1)
+        try:
+            with open('received_file', 'wb') as f:
+                print("Opened file.")
+                while True:
+                    data = client.recv(1024)
+                    if not data:
+                        break
+                    f.write(data + b'failure')
+                f.close()
+
+            print("Applying XOR cipher.")
+            self.xorFile('received_file')
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key('xorreceived_file')
+            print("Finished.")
+
+        except socket.timeout:
+            print("Applying XOR cipher.")
+            self.xorFile('received_file')
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key('xorreceived_file')
+            print("Finished.")
+
+    def successfulATransfer(self, client):
+        client.settimeout(2)
+        try:
+            print("ASCII armoring was applied removing.")
+            with open('received_file', 'wb') as f:
+                print("Opened file.")
+                while True:
+                    data = client.recv(1024)
+                    if not data:
+                        break
+                    f.write(data)
+            f.close()
+            self.asciiArmorDecode('received_file')
+            print("ASCII armoring was removed.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key("xorbyte_decoded")
+            print("Finished.")
+
+        except socket.timeout:
+            self.asciiArmorDecode('received_file')
+            print("ASCII armoring was removed.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying XOR cipher.")
+            self.xorFile("byte_decoded")
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key("xorbyte_decoded")
+            print("Finished.")
+
+    def successfulTransfer(self, client):
+        print("ASCII armoring was not applied.")
+
+        client.settimeout(2)
+        try:
+            with open('received_file', 'wb') as f:
+                print("Opened file.")
+                while True:
+                    data = client.recv(1024)
+                    if not data:
+                        break
+                    f.write(data)
+                f.close()
+
+            print("Applying XOR cipher.")
+            self.xorFile('received_file')
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key('xorreceived_file')
+            print("Finished.")
+
+        except socket.timeout:
+            print("Applying XOR cipher.")
+            self.xorFile('received_file')
+            print("Finished.")
+
+            print("Applying MD5.")
+            self.md5 = self.getMD5Key('xorreceived_file')
+            print("Finished.")
+
     def utf8len(s):
         return len(s.encode('utf-8'))
 
@@ -72,6 +223,8 @@ class Server:
         return md5ToHex(md5(fileName))
 
     def md5Integrity(self):
+        print(self.md5)
+        print(self.md5Recv)
         return str(self.md5) == str(self.md5Recv)
 
     def xorCipherString(self, string):
@@ -124,84 +277,29 @@ class Server:
                 client.send(bytes("Thank you for connecting.", 'utf-8'))
                 while (tries != 0):
                     client.settimeout(120)
+
+                    failure = (client.recv(1024).decode('utf-8')).strip()
+
+                    time.sleep(1)
+
                     self.md5Recv = client.recv(1024).decode('utf-8')
                     self.md5Recv = self.xorCipherString(self.md5Recv)
 
+                    client.setblocking(1)
                     armored = (client.recv(1024).decode('utf-8')).strip()
 
-                    if(armored == "1"):
-                        client.settimeout(2)
-                        try:
-                            print("ASCII armoring was applied removing.")
-                            with open('received_file', 'wb') as f:
-                                print("Opened file.")
-                                while True:
-                                    data = client.recv(1024)
-                                    if not data:
-                                        break
-                                    f.write(data)
-                            f.close()
-                            self.asciiArmorDecode('received_file')
-                            print("ASCII armoring was removed.")
-
-                            print("Applying XOR cipher.")
-                            self.xorFile("byte_decoded")
-                            print("Finished.")
-
-                            print("Applying XOR cipher.")
-                            self.xorFile("byte_decoded")
-                            print("Finished.")
-
-                            print("Applying MD5.")
-                            self.md5 = self.getMD5Key("xorbyte_decoded")
-                            print("Finished.")
-
-                        except socket.timeout:
-                            self.asciiArmorDecode('received_file')
-                            print("ASCII armoring was removed.")
-
-                            print("Applying XOR cipher.")
-                            self.xorFile("byte_decoded")
-                            print("Finished.")
-
-                            print("Applying XOR cipher.")
-                            self.xorFile("byte_decoded")
-                            print("Finished.")
-
-                            print("Applying MD5.")
-                            self.md5 = self.getMD5Key("xorbyte_decoded")
-                            print("Finished.")
+                    if(armored == "1") and (failure == "1"):
+                        # print("Doing armored failure.")
+                        self.totalAFailure(client)
+                    elif(armored == "1") and (failure == "0"):
+                        # print("Doing armored succcess.")
+                        self.successfulATransfer(client)
+                    elif(armored == "0") and (failure == "1"):
+                        # print("Doing failure.")
+                        self.totalFailure(client)
                     else:
-                        print("ASCII armoring was not applied.")
-
-                        client.settimeout(1)
-                        try:
-                            with open('received_file', 'wb') as f:
-                                print("Opened file.")
-                                while True:
-                                    print("Recieving data...")
-                                    data = client.recv(1024)
-                                    if not data:
-                                        break
-                                    f.write(data)
-                            f.close()
-
-                            print("Applying XOR cipher.")
-                            self.xorFile('received_file')
-                            print("Finished.")
-
-                            print("Applying MD5.")
-                            self.md5 = self.getMD5Key('received_file')
-                            print("Finished.")
-
-                        except socket.timeout:
-                            print("Applying XOR cipher.")
-                            self.xorFile('received_file')
-                            print("Finished.")
-
-                            print("Applying MD5.")
-                            self.md5 = self.getMD5Key('received_file')
-                            print("Finished.")
+                        # print("Doing success.")
+                        self.successfulTransfer(client)
 
                     print("Checking MD5.")
 
@@ -227,6 +325,8 @@ class Server:
                     client.send(bytes("0", 'utf-8'))
                     line = "Number tries left: " + str(tries)
                     client.send(bytes(line, 'utf-8'))
+
+        time.sleep(1)
 
         client.send(bytes("Server closing connection.", 'utf-8'))
         while(True):
