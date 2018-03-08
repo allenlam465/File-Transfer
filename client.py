@@ -7,7 +7,7 @@ import time
 import os
 from md5 import md5, md5ToHex
 from xorcipher import encodeDecodeFile, xorString
-from ascii_armor import file_to_ascii, ascii_to_file, mime_encode, bytes_to_bits
+from ascii_armor import file_to_ascii, ascii_to_file, bytes_to_bits
 
 
 class Client:
@@ -19,24 +19,24 @@ class Client:
     def __init__(self):  # creates the class object.
         pass
 
-    # def startSocket(self,ipAddress)
-    def startSocket(self):
+    def startSocket(self, ipAddress):
+        # def startSocket(self):
         # Start socket protocols
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.host = socket.gethostname()  # Obtain host name
-        self.port = 12345  # Port that it uses
-        self.server.settimeout(10)
-        self.server.connect((self.host, self.port))
-        # while(True):
-        #     self.host = ipAddress  # Obtain host name
-        #     try:
-        #         self.port = 12345  # Port that it uses
-        #         self.server.settimeout(10)
-        #         self.server.connect((self.host, self.port))
-        #         break
-        #     except (socket.gaierror, socket.timeout) as e:
-        #         print("Invalid address try again.")
-        #         ipAddress = input("Server IP Address: ")
+        # self.host = socket.gethostname()  # Obtain host name
+        # self.port = 12345  # Port that it uses
+        # self.server.settimeout(10)
+        # self.server.connect((self.host, self.port))
+        while(True):
+            self.host = ipAddress  # Obtain host name
+            try:
+                self.port = 12345  # Port that it uses
+                self.server.settimeout(10)
+                self.server.connect((self.host, self.port))
+                break
+            except (socket.gaierror, socket.timeout) as e:
+                print("Invalid address try again.")
+                ipAddress = input("Server IP Address: ")
 
     def login_user(self):
         user = input("Username: ")
@@ -64,12 +64,9 @@ class Client:
     def sendAFile(self, fileName, fileStream):
         fstream = open(fileName, 'rb')
         sent = fstream.read(int(fileStream))
-        sent = bytes(sent)
-        sent = mime_encode(bytes_to_bits(sent))
         while(sent):
-            self.server.send(bytes(sent, 'utf-8'))
+            self.server.send(sent)
             sent = fstream.read(int(fileStream))
-            sent = mime_encode(bytes_to_bits(bytes.hex(sent)))
 
     def getMD5Key(self, fileName):
         return md5ToHex(md5(fileName))
@@ -131,8 +128,7 @@ class Client:
                         except FileNotFoundError:
                             print("File was not found when hashing. Try again.")
                         except ValueError:
-                            print(
-                                "Invalid value for packet length size or problem with key. Try again.")
+                            print("Invalid value for packet length size. Try again.")
 
                     print("Finished!")
                     print("XOR Cipher on file...")
@@ -157,10 +153,11 @@ class Client:
                     # ASCII Armor the chunks instead of file
                     if(asciiArmor == "Y" or asciiArmor == "y"):
                         print("Applying ASCII armoring...")
+                        self.asciiArmor("xor" + fileName)
                         self.sendMessage("1")
                         print("Applied armoring.")
                         print("Sending file.")
-                        self.sendAFile("xor" + fileName, int(fileStream))
+                        self.sendFile("ascii_armored.txt", int(fileStream))
                         print("Sent.")
                     else:
                         self.sendMessage("0")
@@ -182,8 +179,6 @@ class Client:
                     else:
                         print("Transfer failure.")
                         tries -= 1
-                        print("You have " + str(tries) + " tries left.")
-
                 break
             elif accept == "-1":
                 print(self.recvMessage())

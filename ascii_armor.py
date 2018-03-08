@@ -30,6 +30,7 @@ hex_dictionary = {"0": "0000", "1": "0001", "2": "0010", "3": "0011",
 def file_to_ascii(fileName):
     bits = ""
     with open(fileName, "rb") as f:
+        open("ascii_armored.txt", "w+")
         # read file by byte
         while True:
             byte = f.read(1)
@@ -41,9 +42,14 @@ def file_to_ascii(fileName):
             byte_low = byte_hex[1:2]
             # convert nibbles as hex to bits array
             bits += hex_dictionary[byte_high] + hex_dictionary[byte_low]
-    myfile_ascii = mime_encode(bits)
-    with open("ascii_armored.txt", "w") as f:
-        f.write(myfile_ascii)
+            if len(bits) == 6144:
+                with open("ascii_armored.txt", "a+") as f1:
+                    f1.write(mime_encode(bits))
+                bits = bits[6144:]
+    print(str(len(bits)))
+    ascii_str = mime_encode(bits)
+    with open("ascii_armored.txt", "a+") as f:
+        f.write(ascii_str)
 
 
 def mime_encode(binary_input):
@@ -67,17 +73,10 @@ def mime_encode(binary_input):
 def bytes_to_bits(byte_list):
     bits = ""
     for byte in byte_list:
-        print(byte)
-        print(type(byte))
-        if byte == b'':
-            break
-        byte_hex = hex(byte)[2:]
-        print(byte_hex)
+        byte_hex = byte.hex()
         # split byte into high and low nibbles
         byte_high = byte_hex[:1]
         byte_low = byte_hex[1:2]
-        print(byte_high)
-        print(byte_low)
         # convert nibbles as hex to bits array
         bits += hex_dictionary[byte_high] + hex_dictionary[byte_low]
     return bits
@@ -85,11 +84,21 @@ def bytes_to_bits(byte_list):
 
 def ascii_to_file(fileName):
     with open(fileName, "r") as f:
-        str_file = f.read()
-    hex_string = mime_decode(str_file)
-    bytes_to_write = bytearray.fromhex(hex_string)
-    with open("byte_decoded", "wb") as f:
-        f.write(bytes_to_write)
+        open("byte_decoded", "wb+")
+        while True:
+            str_file = f.read(6144)
+            if not str_file:
+                break
+            hex_string = mime_decode(str_file)
+            bytes_to_write = bytearray.fromhex(hex_string)
+            with open("byte_decoded", "ab+") as f1:
+                f1.write(bytes_to_write)
+    with open("byte_decoded", "rb+") as f:
+        f.seek(-1, 2)
+        last_byte = f.read().hex()
+        if(last_byte == "00"):
+            f.seek(-1, 2)
+            f.truncate()
 
 
 def mime_decode(str_input):
@@ -111,11 +120,7 @@ def mime_decode(str_input):
         ret += binary_to_hex(eight_bits) + " "
         # substring bits for next 8
         bits = bits[8:]
-    last_byte = ret[len(ret) - 4:]
-    if last_byte.strip() == "00":
-        return ret[:len(ret) - 4]
-    else:
-        return ret
+    return ret
 
 
 def int_to_bits(int_input):
