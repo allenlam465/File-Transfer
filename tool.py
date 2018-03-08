@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from client import Client
 from server import Server
@@ -12,7 +12,6 @@ def client():
     client = Client()
     ipAddress = input("Server IP Address:")
     client.startSocket(ipAddress)
-    client.startSocket()
     client.main()
 
 
