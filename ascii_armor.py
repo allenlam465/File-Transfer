@@ -110,9 +110,6 @@ def mime_decode(str_input):
         b = mime_values.index(c)
         # convert that int to binary
         bits += int_to_bits(b)[2:]
-    # pad input to be div by 8
-    while len(bits) % 8 != 0:
-        bits += "0"
     while len(bits) > 0:
         # decode 8 bits at a time
         eight_bits = int(bits[:8])
