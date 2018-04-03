@@ -1,4 +1,4 @@
-# CS380_Project
+# CS380_Project (FTP)
 
 Group - AppleVictims
 Members - Allen Lam, Dylan Nguyen, John Ung, Sai Padmanaban
